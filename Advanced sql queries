@@ -1,0 +1,81 @@
+-- Query 1: Select top 10 customers by total spend in descending order
+SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_spend
+FROM Customers c
+JOIN Orders o ON c.customer_id = o.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY total_spend DESC
+LIMIT 10;
+
+-- Query 2: Calculate average order amount per customer and filter those with average above $500
+WITH AvgOrderAmount AS (
+    SELECT customer_id, AVG(total_amount) AS avg_order_amount
+    FROM Orders
+    GROUP BY customer_id
+)
+SELECT c.customer_id, c.first_name, c.last_name, ao.avg_order_amount
+FROM Customers c
+JOIN AvgOrderAmount ao ON c.customer_id = ao.customer_id
+WHERE ao.avg_order_amount > 500;
+
+-- Query 3: Identify customers who placed more than 5 orders in the last month
+SELECT customer_id, COUNT(*) AS num_orders
+FROM Orders
+WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH)
+GROUP BY customer_id
+HAVING num_orders > 5;
+
+-- Query 4: Calculate monthly revenue for the last 12 months
+SELECT YEAR(order_date) AS order_year, MONTH(order_date) AS order_month, SUM(total_amount) AS monthly_revenue
+FROM Orders
+WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+GROUP BY order_year, order_month
+ORDER BY order_year DESC, order_month DESC;
+
+-- Query 5: List top 5 products with the highest sales volume
+SELECT p.product_id, p.product_name, SUM(oi.quantity) AS total_sales
+FROM Products p
+JOIN OrderItems oi ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name
+ORDER BY total_sales DESC
+LIMIT 5;
+
+-- Query 6: Calculate cumulative revenue by customer for the current year
+SELECT customer_id, 
+       MONTH(order_date) AS order_month, 
+       SUM(total_amount) OVER (PARTITION BY customer_id ORDER BY MONTH(order_date)) AS cumulative_revenue
+FROM Orders
+WHERE YEAR(order_date) = YEAR(CURRENT_DATE());
+
+-- Query 7: Rank customers based on their lifetime value (LTV)
+SELECT customer_id, first_name, last_name, total_spend,
+       RANK() OVER (ORDER BY total_spend DESC) AS ltv_rank
+FROM (
+    SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_spend
+    FROM Customers c
+    JOIN Orders o ON c.customer_id = o.customer_id
+    GROUP BY c.customer_id, c.first_name, c.last_name
+) AS customer_spend;
+
+-- Query 8: Identify customers who have not placed an order in the last 6 months
+SELECT customer_id, first_name, last_name
+FROM Customers
+WHERE customer_id NOT IN (
+    SELECT DISTINCT customer_id
+    FROM Orders
+    WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+);
+
+-- Query 9: Calculate average revenue per user per month over the past year
+SELECT YEAR(order_date) AS order_year, MONTH(order_date) AS order_month,
+       AVG(total_amount) AS avg_revenue_per_user
+FROM Orders
+WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+GROUP BY order_year, order_month
+ORDER BY order_year DESC, order_month DESC;
+
+-- Query 10: Find the day of the week with the highest sales volume
+SELECT DAYNAME(order_date) AS sales_day_of_week, COUNT(*) AS num_orders
+FROM Orders
+GROUP BY sales_day_of_week
+ORDER BY num_orders DESC
+LIMIT 1;
