@@ -1,1 +1,49 @@
 
+-- Query 1: Select all records from Campaigns table
+SELECT * 
+FROM Campaigns;
+
+-- Query 2: Select specific columns from Campaigns table
+SELECT campaign_name, start_date, end_date 
+FROM Campaigns;
+
+-- Query 3: Filter records with a WHERE clause in Customers table
+SELECT * 
+FROM Customers 
+WHERE country = 'USA';
+
+-- Query 4: Order results by registration_date in Customers table
+SELECT * 
+FROM Customers 
+ORDER BY registration_date DESC;
+
+-- Query 5: Count the number of rows in Customers table
+SELECT COUNT(*) 
+FROM Customers;
+
+-- Query 6: Summarize impressions and clicks by campaign_id in CampaignPerformance table
+SELECT campaign_id, 
+       SUM(impressions) AS total_impressions, 
+       SUM(clicks) AS total_clicks
+FROM CampaignPerformance
+GROUP BY campaign_id;
+
+-- Query 7: Join Campaigns and CampaignPerformance tables
+SELECT c.campaign_name, 
+       p.impressions, 
+       p.clicks
+FROM Campaigns c
+INNER JOIN CampaignPerformance p ON c.campaign_id = p.campaign_id;
+
+-- Query 8: Insert a new record into Customers table
+INSERT INTO Customers (first_name, last_name, email)
+VALUES ('John', 'Doe', 'john.doe@example.com');
+
+-- Query 9: Update city for a specific customer in Customers table
+UPDATE Customers 
+SET city = 'New York' 
+WHERE customer_id = 1;
+
+-- Query 10: Delete a campaign record from Campaigns table
+DELETE FROM Campaigns 
+WHERE campaign_id = 5;
